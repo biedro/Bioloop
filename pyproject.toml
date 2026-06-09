@@ -1,0 +1,31 @@
+[project]
+name = "bioloop"
+version = "0.1.0"
+description = "Open-source Oura data archive and sleep-rings Streamlit dashboard."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+  "matplotlib>=3.8",
+  "pandas>=2.1",
+  "plotly>=5.20",
+  "python-dotenv>=1.0",
+  "requests>=2.31",
+  "streamlit>=1.58",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["oura_data*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
