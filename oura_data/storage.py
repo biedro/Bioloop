@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
+from uuid import uuid4
 
 import pandas as pd
 
@@ -140,6 +141,37 @@ class OuraStore:
                   start_datetime TEXT,
                   end_datetime TEXT,
                   payload TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS artifacts (
+                  id TEXT PRIMARY KEY,
+                  type TEXT NOT NULL,
+                  title TEXT NOT NULL,
+                  date_range TEXT NOT NULL,
+                  settings_json TEXT NOT NULL,
+                  narrative_json TEXT NOT NULL,
+                  privacy_level TEXT NOT NULL,
+                  created_at TEXT NOT NULL,
+                  updated_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS moments (
+                  id TEXT PRIMARY KEY,
+                  start_day TEXT NOT NULL,
+                  end_day TEXT,
+                  title TEXT NOT NULL,
+                  note TEXT,
+                  source TEXT NOT NULL DEFAULT 'user',
+                  created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS beta_feedback (
+                  id TEXT PRIMARY KEY,
+                  artifact_id TEXT,
+                  kind TEXT NOT NULL,
+                  value TEXT,
+                  note TEXT,
+                  created_at TEXT NOT NULL
                 );
                 """
             )
@@ -329,6 +361,140 @@ class OuraStore:
     def query(self, sql: str, params: Iterable[Any] = ()) -> pd.DataFrame:
         with self.connect() as conn:
             return pd.read_sql_query(sql, conn, params=tuple(params))
+
+    def save_artifact(
+        self,
+        *,
+        artifact_type: str,
+        title: str,
+        date_range: dict[str, Any],
+        settings: dict[str, Any],
+        narrative: dict[str, Any],
+        privacy_level: str,
+        artifact_id: str | None = None,
+    ) -> str:
+        now = utc_now()
+        artifact_id = artifact_id or uuid4().hex
+        with self.connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO artifacts(
+                  id, type, title, date_range, settings_json, narrative_json,
+                  privacy_level, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                  type=excluded.type,
+                  title=excluded.title,
+                  date_range=excluded.date_range,
+                  settings_json=excluded.settings_json,
+                  narrative_json=excluded.narrative_json,
+                  privacy_level=excluded.privacy_level,
+                  updated_at=excluded.updated_at
+                """,
+                (
+                    artifact_id,
+                    artifact_type,
+                    title,
+                    json.dumps(date_range, sort_keys=True),
+                    json.dumps(settings, sort_keys=True),
+                    json.dumps(narrative, sort_keys=True),
+                    privacy_level,
+                    now,
+                    now,
+                ),
+            )
+        return artifact_id
+
+    def list_artifacts(self) -> pd.DataFrame:
+        return self.query("SELECT * FROM artifacts ORDER BY created_at DESC")
+
+    def get_artifact(self, artifact_id: str) -> pd.DataFrame:
+        return self.query("SELECT * FROM artifacts WHERE id=?", (artifact_id,))
+
+    def delete_artifact(self, artifact_id: str) -> None:
+        with self.connect() as conn:
+            conn.execute("DELETE FROM artifacts WHERE id=?", (artifact_id,))
+
+    def save_moment(
+        self,
+        *,
+        start_day: str,
+        title: str,
+        end_day: str | None = None,
+        note: str | None = None,
+        source: str = "user",
+        moment_id: str | None = None,
+    ) -> str:
+        now = utc_now()
+        moment_id = moment_id or uuid4().hex
+        with self.connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO moments(id, start_day, end_day, title, note, source, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                  start_day=excluded.start_day,
+                  end_day=excluded.end_day,
+                  title=excluded.title,
+                  note=excluded.note,
+                  source=excluded.source
+                """,
+                (moment_id, start_day, end_day, title, note, source, now),
+            )
+        return moment_id
+
+    def list_moments(self) -> pd.DataFrame:
+        return self.query("SELECT * FROM moments ORDER BY start_day DESC, created_at DESC")
+
+    def list_moments_between(self, start_day: str, end_day: str) -> pd.DataFrame:
+        return self.query(
+            """
+            SELECT *
+            FROM moments
+            WHERE start_day <= ?
+              AND COALESCE(end_day, start_day) >= ?
+            ORDER BY start_day ASC, created_at ASC
+            """,
+            (end_day, start_day),
+        )
+
+    def delete_moment(self, moment_id: str) -> None:
+        with self.connect() as conn:
+            conn.execute("DELETE FROM moments WHERE id=?", (moment_id,))
+
+    def record_feedback(
+        self,
+        *,
+        kind: str,
+        value: str | int | float | None = None,
+        note: str | None = None,
+        artifact_id: str | None = None,
+    ) -> str:
+        feedback_id = uuid4().hex
+        with self.connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO beta_feedback(id, artifact_id, kind, value, note, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (feedback_id, artifact_id, kind, None if value is None else str(value), note, utc_now()),
+            )
+        return feedback_id
+
+    def clear_imported_data(self) -> None:
+        with self.connect() as conn:
+            for table in [
+                "raw_documents",
+                "sync_status",
+                "sleep_periods",
+                "sleep_segments",
+                "daily_metrics",
+                "heart_rate",
+                "workouts",
+                "tags",
+            ]:
+                conn.execute(f"DELETE FROM {table}")
 
 
 def utc_now() -> str:

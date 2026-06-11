@@ -1,4 +1,4 @@
-"""Local Oura archive and dashboard helpers."""
+"""Local Oura archive and Bioloop artifact helpers."""
 
 __all__ = [
     "charts",

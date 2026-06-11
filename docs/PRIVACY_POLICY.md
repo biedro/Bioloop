@@ -2,7 +2,7 @@
 
 Last updated: June 8, 2026
 
-Bioloop is an independent, open-source dashboard for users who choose to connect their Oura account through OAuth.
+Bioloop is an independent, open-source data-art studio for users who choose to connect their Oura account through OAuth.
 
 The app may access Oura profile, sleep, readiness, activity, heart-rate, workout, tag, session, SpO2, stress, ring configuration, and heart health data depending on scopes granted by the user.
 

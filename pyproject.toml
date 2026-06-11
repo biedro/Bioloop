@@ -1,7 +1,7 @@
 [project]
 name = "bioloop"
 version = "0.1.0"
-description = "Open-source Oura data archive and sleep-rings Streamlit dashboard."
+description = "Open-source Oura data archive and Life Rings data-art studio."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

@@ -1,6 +1,8 @@
 # Bioloop
 
-Privacy-first, open-source dashboard designed to help you own, archive, and visualize your wearable health metrics. It connects to the Oura API via OAuth, backups your history into a private local SQLite database, and renders beautiful 24-hour radial charts mapping sleep stages, recovery trends, workouts, and tags.
+Privacy-first, open-source data-art studio designed to help you own, archive, and transform wearable history into calm, reflective artifacts. It connects to the Oura API via OAuth, backs up your history into a private local SQLite database, and renders beautiful 24-hour radial Life Rings mapping sleep stages, recovery trends, workouts, and tags.
+
+Bioloop is artifact-first, not dashboard-first. The intended first impression is a private museum of the user's wearable history: stories, artifacts, timeline, studio, and privacy controls before metric dashboards or analysis panels. See the [Product and UX Constitution](docs/PRODUCT_UX_CONSTITUTION.md), [Product Experience Design](docs/PRODUCT_EXPERIENCE_DESIGN.md), and [Visual References](docs/VISUAL_REFERENCES.md).
 
 The sleep rings visualization is inspired by Dmitry Sergeev's original Oura chart:
 
@@ -13,8 +15,8 @@ This project is independent and is not affiliated with, endorsed by, or sponsore
 
 - OAuth authorization code flow for Oura API v2.
 - Local SQLite archive for sleep, readiness, activity, workouts, tags, sessions, SpO2, stress, ring configuration, heart health, and heart-rate data.
-- 24-hour sleep rings chart with sleep/awake, sleep-stage colors, custom palettes, month/season guides, and workout/tag overlays.
-- Trend dashboard for sleep duration, scores, HRV, resting heart rate, workouts, tags, and monthly summaries.
+- 24-hour Life Rings artifact with sleep/awake, sleep-stage colors, custom palettes, month/season guides, and workout/tag overlays.
+- Supporting trend views for sleep duration, scores, HRV, resting heart rate, workouts, tags, and monthly summaries.
 - CSV exports for normalized and raw archive tables.
 - Public Streamlit session mode for safer multi-user hosting.
 
@@ -90,6 +92,8 @@ See [docs/OURA_REVIEW_CHECKLIST.md](docs/OURA_REVIEW_CHECKLIST.md).
 ```bash
 .venv/bin/python -m pytest
 ```
+
+Before designing or implementing product-facing changes, read [docs/PRODUCT_UX_CONSTITUTION.md](docs/PRODUCT_UX_CONSTITUTION.md). Build artifact-first: prioritize Stories, Artifacts, Timeline, Studio, and Settings / Privacy. Avoid metric-dashboard homepages, chatbot-first navigation, red/green scoring systems, gamification, medical claims, and raw health values in shared outputs by default.
 
 Use synthetic fixtures only. Do not commit real Oura data, screenshots containing private data, or OAuth credentials.
 
